@@ -201,7 +201,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         votingActive, setVotingActive,
         nominations, addNomination, updateNominationStatus,
         offlineRecords, markOfflineVote, unmarkOfflineVote,
-        registeredStudents, addStudent, removeStudent, isStudentRegistered,
+        registeredStudents, addStudent, addStudentsBulk, removeStudent, isStudentRegistered,
       }}
     >
       {children}
