@@ -23,6 +23,7 @@ interface VotingContextType {
   unmarkOfflineVote: (studentId: string) => void;
   registeredStudents: RegisteredStudent[];
   addStudent: (student: RegisteredStudent) => void;
+  addStudentsBulk: (students: RegisteredStudent[]) => { added: number; skipped: number };
   removeStudent: (studentId: string) => void;
   isStudentRegistered: (studentId: string) => boolean;
 }
@@ -150,7 +151,6 @@ export function VotingProvider({ children }: { children: ReactNode }) {
 
   const addStudent = (student: RegisteredStudent) => {
     setRegisteredStudents(prev => [...prev, student]);
-    // Also add to offline records
     setOfflineRecords(prev => [...prev, {
       studentId: student.studentId,
       studentName: student.name,
@@ -158,6 +158,29 @@ export function VotingProvider({ children }: { children: ReactNode }) {
       votedOnline: false,
       markedOffline: false,
     }]);
+  };
+
+  const addStudentsBulk = (students: RegisteredStudent[]): { added: number; skipped: number } => {
+    let added = 0;
+    let skipped = 0;
+    const newStudents: RegisteredStudent[] = [];
+    const newRecords: OfflineVoteRecord[] = [];
+
+    for (const s of students) {
+      if (registeredStudents.some(rs => rs.studentId === s.studentId) || newStudents.some(ns => ns.studentId === s.studentId)) {
+        skipped++;
+      } else {
+        added++;
+        newStudents.push(s);
+        newRecords.push({ studentId: s.studentId, studentName: s.name, department: s.department, votedOnline: false, markedOffline: false });
+      }
+    }
+
+    if (newStudents.length > 0) {
+      setRegisteredStudents(prev => [...prev, ...newStudents]);
+      setOfflineRecords(prev => [...prev, ...newRecords]);
+    }
+    return { added, skipped };
   };
 
   const removeStudent = (studentId: string) => {
@@ -178,7 +201,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         votingActive, setVotingActive,
         nominations, addNomination, updateNominationStatus,
         offlineRecords, markOfflineVote, unmarkOfflineVote,
-        registeredStudents, addStudent, removeStudent, isStudentRegistered,
+        registeredStudents, addStudent, addStudentsBulk, removeStudent, isStudentRegistered,
       }}
     >
       {children}
