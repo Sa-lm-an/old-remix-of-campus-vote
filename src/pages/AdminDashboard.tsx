@@ -35,7 +35,7 @@ const AdminDashboard = () => {
 
   if (!isAdmin) { navigate('/admin-login'); return null; }
 
-  const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+  
 
   const handleAddCandidate = () => {
     if (!newCandidate.name || !newCandidate.department || !newCandidate.position) {
