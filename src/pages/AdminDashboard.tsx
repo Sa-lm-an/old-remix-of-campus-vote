@@ -35,7 +35,7 @@ const AdminDashboard = () => {
 
   if (!isAdmin) { navigate('/admin-login'); return null; }
 
-  const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+  
 
   const handleAddCandidate = () => {
     if (!newCandidate.name || !newCandidate.department || !newCandidate.position) {
@@ -109,11 +109,10 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-5">
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="rounded-2xl bg-card p-5 shadow-card"><Users className="h-6 w-6 text-primary" /><p className="mt-2 font-display text-2xl font-bold text-foreground">{candidates.length}</p><p className="text-sm text-muted-foreground">Candidates</p></div>
           <div className="rounded-2xl bg-card p-5 shadow-card"><UserPlus className="h-6 w-6 text-primary" /><p className="mt-2 font-display text-2xl font-bold text-foreground">{registeredStudents.length}</p><p className="text-sm text-muted-foreground">Registered Students</p></div>
           <div className="rounded-2xl bg-card p-5 shadow-card"><Vote className="h-6 w-6 text-primary" /><p className="mt-2 font-display text-2xl font-bold text-foreground">{votedUsers.length}</p><p className="text-sm text-muted-foreground">Voters</p></div>
-          <div className="rounded-2xl bg-card p-5 shadow-card"><BarChart3 className="h-6 w-6 text-primary" /><p className="mt-2 font-display text-2xl font-bold text-foreground">{totalVotes}</p><p className="text-sm text-muted-foreground">Total Votes</p></div>
           <div className={`rounded-2xl p-5 shadow-card ${votingActive ? 'bg-primary/10' : 'bg-destructive/10'}`}>
             {votingActive ? <Power className="h-6 w-6 text-primary" /> : <PowerOff className="h-6 w-6 text-destructive" />}
             <p className="mt-2 font-display text-2xl font-bold text-foreground">{votingActive ? 'Active' : 'Paused'}</p>
@@ -173,7 +172,7 @@ const AdminDashboard = () => {
                         <img src={candidate.image} alt={candidate.name} className="h-16 w-16 rounded-xl object-cover" />
                         <div className="flex-1">
                           <p className="font-semibold text-foreground">{candidate.name}</p>
-                          <p className="text-sm text-muted-foreground">{candidate.department} • {candidate.votes} votes</p>
+                          <p className="text-sm text-muted-foreground">{candidate.department}</p>
                         </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
