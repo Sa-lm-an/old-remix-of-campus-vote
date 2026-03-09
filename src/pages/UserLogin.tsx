@@ -8,7 +8,7 @@ import { OtpInput } from '@/components/OtpInput';
 import { useVoting } from '@/contexts/VotingContext';
 import { toast } from '@/hooks/use-toast';
 
-type Step = 'scan' | 'phone' | 'otp' | 'choice';
+type Step = 'scan' | 'phone' | 'otp';
 
 const UserLogin = () => {
   const navigate = useNavigate();
