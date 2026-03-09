@@ -11,8 +11,8 @@ import { Position, POSITIONS } from '@/types/voting';
 
 const Nominate = () => {
   const navigate = useNavigate();
-  const { currentUser, addNomination } = useVoting();
-  const [name, setName] = useState(currentUser?.name || '');
+  const { addNomination } = useVoting();
+  const [name, setName] = useState('');
   const [position, setPosition] = useState<Position | ''>('');
   const [department, setDepartment] = useState(currentUser?.department || '');
   const [image, setImage] = useState('');
