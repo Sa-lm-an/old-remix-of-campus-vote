@@ -105,7 +105,7 @@ const UserLogin = () => {
         <div className="mx-auto mt-8 max-w-md">
           {/* Progress Steps */}
           <div className="mb-8 flex items-center justify-center gap-2">
-            {['scan', 'phone', 'otp', 'choice'].map((s, i) => (
+            {['scan', 'phone', 'otp'].map((s, i) => (
               <div
                 key={s}
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all ${
