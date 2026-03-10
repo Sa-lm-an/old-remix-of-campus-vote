@@ -75,7 +75,7 @@ const AdminDashboard = () => {
       }
 
       if (students.length === 0) {
-        toast({ title: 'No Data Found', description: 'CSV must have columns: StudentID, Name, Department', variant: 'destructive' });
+        toast({ title: 'No Data Found', description: 'CSV must have columns: StudentID, Name, Department, Phone', variant: 'destructive' });
         return;
       }
 
