@@ -231,7 +231,7 @@ const ControllerDashboard = () => {
               ))}
               {filteredRecords.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No students found.</TableCell>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No students found.</TableCell>
                 </TableRow>
               )}
             </TableBody>
