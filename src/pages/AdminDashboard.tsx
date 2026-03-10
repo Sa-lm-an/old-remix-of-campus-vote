@@ -248,10 +248,11 @@ const AdminDashboard = () => {
               <div className="rounded-2xl bg-card shadow-card overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                     <TableRow>
                       <TableHead>Student ID</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Department</TableHead>
+                      <TableHead>Phone</TableHead>
                       <TableHead>Vote Status</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
