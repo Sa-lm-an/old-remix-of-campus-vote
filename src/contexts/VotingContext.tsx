@@ -156,6 +156,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
       studentId: student.studentId,
       studentName: student.name,
       department: student.department,
+      phone: student.phone,
       votedOnline: false,
       markedOffline: false,
     }]);
