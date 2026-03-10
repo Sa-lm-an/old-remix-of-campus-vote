@@ -45,8 +45,8 @@ const Nominate = () => {
   };
 
   const handleSubmit = async () => {
-    if (!studentId || !name || !position || !department || !documentUrl) {
-      toast({ title: 'Missing Fields', description: 'Please fill all fields and upload a document.', variant: 'destructive' });
+    if (!studentId || !name || !position || !department || !image || !documentUrl) {
+      toast({ title: 'Missing Fields', description: 'Please fill all fields, upload your photo and supporting document.', variant: 'destructive' });
       return;
     }
     setIsSubmitting(true);
