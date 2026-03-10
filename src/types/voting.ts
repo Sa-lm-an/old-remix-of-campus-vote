@@ -27,11 +27,16 @@ export interface Nomination {
   position: Position;
   department: string;
   image: string;
-  documentUrl: string;
-  documentName: string;
+  applicationFormUrl: string;
+  applicationFormName: string;
+  marklistUrl: string;
+  marklistName: string;
+  photoUrl: string;
+  photoName: string;
   status: 'pending' | 'approved' | 'rejected';
   submittedAt: string;
 }
+
 
 export interface RegisteredStudent {
   studentId: string;
