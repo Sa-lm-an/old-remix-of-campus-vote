@@ -176,6 +176,7 @@ const ControllerDashboard = () => {
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('department')}>
                   Department <ArrowUpDown className="inline h-3 w-3 ml-1" />
                 </TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('status')}>
                   Status <ArrowUpDown className="inline h-3 w-3 ml-1" />
                 </TableHead>
