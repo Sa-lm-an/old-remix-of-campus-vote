@@ -40,14 +40,14 @@ const initialCandidates: Candidate[] = [
 ];
 
 const initialStudents: RegisteredStudent[] = [
-  { studentId: 'STU001', name: 'Aarav Patel', department: 'Computer Science' },
-  { studentId: 'STU002', name: 'Meera Nair', department: 'Engineering' },
-  { studentId: 'STU003', name: 'Rahul Gupta', department: 'Business' },
-  { studentId: 'STU004', name: 'Ananya Singh', department: 'Arts' },
-  { studentId: 'STU005', name: 'Karthik Iyer', department: 'Science' },
-  { studentId: 'STU006', name: 'Sneha Reddy', department: 'Law' },
-  { studentId: 'STU007', name: 'Arjun Kumar', department: 'Computer Science' },
-  { studentId: 'STU008', name: 'Divya Menon', department: 'Engineering' },
+  { studentId: 'STU001', name: 'Aarav Patel', department: 'Computer Science', phone: '9876543210' },
+  { studentId: 'STU002', name: 'Meera Nair', department: 'Engineering', phone: '9876543211' },
+  { studentId: 'STU003', name: 'Rahul Gupta', department: 'Business', phone: '9876543212' },
+  { studentId: 'STU004', name: 'Ananya Singh', department: 'Arts', phone: '9876543213' },
+  { studentId: 'STU005', name: 'Karthik Iyer', department: 'Science', phone: '9876543214' },
+  { studentId: 'STU006', name: 'Sneha Reddy', department: 'Law', phone: '9876543215' },
+  { studentId: 'STU007', name: 'Arjun Kumar', department: 'Computer Science', phone: '9876543216' },
+  { studentId: 'STU008', name: 'Divya Menon', department: 'Engineering', phone: '9876543217' },
 ];
 
 const initialOfflineRecords: OfflineVoteRecord[] = initialStudents.map(s => ({

@@ -42,7 +42,7 @@ const AdminDashboard = () => {
   };
 
   const handleAddStudent = () => {
-    if (!newStudent.studentId || !newStudent.name || !newStudent.department) {
+    if (!newStudent.studentId || !newStudent.name || !newStudent.department || !newStudent.phone) {
       toast({ title: 'Missing Fields', description: 'Please fill in all fields.', variant: 'destructive' });
       return;
     }
@@ -52,7 +52,7 @@ const AdminDashboard = () => {
     }
     addStudent(newStudent);
     toast({ title: 'Student Added', description: `${newStudent.name} has been added to the voter list.` });
-    setNewStudent({ studentId: '', name: '', department: '' });
+    setNewStudent({ studentId: '', name: '', department: '', phone: '' });
     setStudentDialogOpen(false);
   };
 
