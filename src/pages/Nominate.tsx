@@ -45,8 +45,8 @@ const Nominate = () => {
   };
 
   const handleSubmit = async () => {
-    if (!studentId || !name || !position || !department || !documentUrl) {
-      toast({ title: 'Missing Fields', description: 'Please fill all fields and upload a document.', variant: 'destructive' });
+    if (!studentId || !name || !position || !department || !image || !documentUrl) {
+      toast({ title: 'Missing Fields', description: 'Please fill all fields, upload your photo and supporting document.', variant: 'destructive' });
       return;
     }
     setIsSubmitting(true);
@@ -57,7 +57,7 @@ const Nominate = () => {
       name,
       position: position as Position,
       department,
-      image: image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+      image,
       documentUrl,
       documentName,
     });
@@ -140,7 +140,7 @@ const Nominate = () => {
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm font-medium">
-                  <Image className="h-4 w-4 text-muted-foreground" /> Your Photo (optional)
+                  <Image className="h-4 w-4 text-muted-foreground" /> Your Photo *
                 </Label>
                 <div className="flex items-center gap-4">
                   {image && (
@@ -158,7 +158,7 @@ const Nominate = () => {
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm font-medium">
-                  <FileUp className="h-4 w-4 text-muted-foreground" /> Supporting Document * (PDF, image)
+                  <FileUp className="h-4 w-4 text-muted-foreground" /> Supporting Document * (Application Form, Marklist, etc.)
                 </Label>
                 <label className="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-dashed border-border/50 bg-background/30 p-5 text-sm transition-all hover:border-primary hover:bg-primary/5 group">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${documentName ? 'bg-green-500/20' : 'bg-muted'}`}>
