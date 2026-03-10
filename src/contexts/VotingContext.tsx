@@ -174,7 +174,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
       } else {
         added++;
         newStudents.push(s);
-        newRecords.push({ studentId: s.studentId, studentName: s.name, department: s.department, votedOnline: false, markedOffline: false });
+        newRecords.push({ studentId: s.studentId, studentName: s.name, department: s.department, phone: s.phone, votedOnline: false, markedOffline: false });
       }
     }
 
