@@ -307,33 +307,53 @@ const AdminDashboard = () => {
                 <p className="text-center text-muted-foreground py-8">No nominations submitted yet.</p>
               ) : (
                 nominations.map(nom => (
-                  <div key={nom.id} className="flex items-center gap-4 rounded-2xl bg-card p-4 shadow-card">
-                    <img src={nom.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${nom.name}`} alt={nom.name} className="h-16 w-16 rounded-xl object-cover" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-foreground">{nom.name}</p>
-                        <Badge variant={nom.status === 'approved' ? 'default' : nom.status === 'rejected' ? 'destructive' : 'secondary'}>
-                          {nom.status}
-                        </Badge>
+                  <div key={nom.id} className="rounded-2xl bg-card p-5 shadow-card space-y-3">
+                    <div className="flex items-start gap-4">
+                      <img
+                        src={nom.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${nom.name}`}
+                        alt={nom.name}
+                        className="h-16 w-16 rounded-xl object-cover cursor-pointer ring-2 ring-border/30 hover:ring-primary/50 transition-all"
+                        onClick={() => setViewingImage(nom.image)}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-foreground">{nom.name}</p>
+                          <Badge variant={nom.status === 'approved' ? 'default' : nom.status === 'rejected' ? 'destructive' : 'secondary'}>
+                            {nom.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{nom.position} • {nom.department}</p>
+                        <p className="text-xs text-muted-foreground">ID: {nom.studentId} • Submitted: {new Date(nom.submittedAt).toLocaleDateString()}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{nom.position} • {nom.department}</p>
-                      <p className="text-xs text-muted-foreground">ID: {nom.studentId} • Submitted: {new Date(nom.submittedAt).toLocaleDateString()}</p>
+                      {nom.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <Button variant="hero" size="sm" onClick={() => handleNomination(nom.id, 'approved')}>
+                            <FileCheck className="mr-1 h-4 w-4" /> Approve
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleNomination(nom.id, 'rejected')}>
+                            <FileX className="mr-1 h-4 w-4" /> Reject
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    {nom.documentName && (
-                      <a href={nom.documentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
-                        <Eye className="h-3 w-3" /> {nom.documentName}
-                      </a>
-                    )}
-                    {nom.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <Button variant="hero" size="sm" onClick={() => handleNomination(nom.id, 'approved')}>
-                          <FileCheck className="mr-1 h-4 w-4" /> Approve
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleNomination(nom.id, 'rejected')}>
-                          <FileX className="mr-1 h-4 w-4" /> Reject
-                        </Button>
-                      </div>
-                    )}
+                    {/* Documents section */}
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-border/30">
+                      {nom.applicationFormName && (
+                        <button onClick={() => setViewingImage(nom.applicationFormUrl)} className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-xs text-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                          <Eye className="h-3 w-3" /> Application Form
+                        </button>
+                      )}
+                      {nom.marklistName && (
+                        <button onClick={() => setViewingImage(nom.marklistUrl)} className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-xs text-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                          <Eye className="h-3 w-3" /> Marklist
+                        </button>
+                      )}
+                      {nom.photoName && (
+                        <button onClick={() => setViewingImage(nom.photoUrl)} className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-xs text-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                          <Eye className="h-3 w-3" /> Photo Document
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -341,6 +361,20 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Enlarged Image/Document Viewer */}
+      <Dialog open={!!viewingImage} onOpenChange={(open) => !open && setViewingImage(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] p-2">
+          <DialogHeader><DialogTitle>Document Preview</DialogTitle></DialogHeader>
+          {viewingImage && (
+            viewingImage.startsWith('data:application/pdf') ? (
+              <iframe src={viewingImage} className="w-full h-[75vh] rounded-lg" title="Document" />
+            ) : (
+              <img src={viewingImage} alt="Enlarged preview" className="w-full h-auto max-h-[75vh] object-contain rounded-lg" />
+            )
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
