@@ -292,7 +292,7 @@ const AdminDashboard = () => {
                     ))}
                     {registeredStudents.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No students registered yet.</TableCell>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No students registered yet.</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
