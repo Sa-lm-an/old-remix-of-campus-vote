@@ -238,10 +238,10 @@ const AdminDashboard = () => {
 
               <div className="rounded-xl bg-card/60 border border-border/40 p-4 mb-4">
                 <p className="text-xs text-muted-foreground">
-                  <strong>CSV Format:</strong> StudentID, Name, Department (one per row). Header row is optional.
+                  <strong>CSV Format:</strong> StudentID, Name, Department, Phone (one per row). Header row is optional.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Example: <code className="bg-muted px-1 rounded">STU009,John Doe,Computer Science</code>
+                  Example: <code className="bg-muted px-1 rounded">STU009,John Doe,Computer Science,9876543210</code>
                 </p>
               </div>
 
