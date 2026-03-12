@@ -231,7 +231,7 @@ const Index = () => {
 
       {/* ===== FOOTER ===== */}
       <footer className="bg-[#193248] py-6 text-center text-[#7c8b93] text-sm">
-        <p>© 2026 VoxNova E-Voting System. Built for secure campus elections.</p>
+        <p>build with ❤️ by fabin,shahana,salman,rena</p>
       </footer>
     </div>
   );
