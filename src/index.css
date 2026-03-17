@@ -244,6 +244,7 @@
     transform: translateY(-0.5px);
     backface-visibility: hidden;
     -webkit-font-smoothing: antialiased;
+    transform: translateZ(0);
   }
 }
 

@@ -62,17 +62,17 @@ const Results = () => {
 
             if (pos === 'Department Representative') {
               const departments = [...new Set([
-                ...candidates.filter(c => c.position === pos).map(c => c.department),
+                ...candidates.filter(c => c.position === pos).map(c => c.department.trim().toUpperCase()),
                 ...Object.keys(notaVotes)
                   .filter(k => k.startsWith(`${pos}_`))
-                  .map(k => k.replace(`${pos}_`, ''))
-              ])];
+                  .map(k => k.replace(`${pos}_`, '').trim().toUpperCase())
+              ])].sort();
 
               return (
                 <TabsContent key={pos} value={pos}>
                   <div className="mt-8 space-y-12 max-w-2xl mx-auto">
                     {departments.map(dept => {
-                      const deptCandidates = sorted.filter(c => c.department === dept);
+                      const deptCandidates = sorted.filter(c => c.department.trim().toUpperCase() === dept);
                       const deptNotaKey = `${pos}_${dept}`;
                       const deptNotaCount = notaVotes[deptNotaKey] || 0;
 

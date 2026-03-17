@@ -33,6 +33,7 @@ interface VotingContextType {
   isStudentRegistered: (student_id: string) => boolean;
   isLoading: boolean;
   notaVotes: Record<string, number>;
+  offlineNotaVotes: Record<string, number>;
   addOfflineNota: (position: string, count: number, department?: string) => Promise<void>;
 }
 
@@ -54,6 +55,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
   const [registeredStudents, setRegisteredStudents] = useState<RegisteredStudent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notaVotes, setNotaVotes] = useState<Record<string, number>>({});
+  const [offlineNotaVotes, setOfflineNotaVotes] = useState<Record<string, number>>({});
 
   // Initial Data Fetching & Real-time Subscriptions
   useEffect(() => {
@@ -105,7 +107,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
             online_votes: c.online_votes || 0,
             offline_votes: c.offline_votes || 0,
             votes: c.votes || 0,
-            department: c.department,
+            department: c.department.trim().toUpperCase(),
             party: c.party || ''
           })));
         }
@@ -132,7 +134,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
             const student = {
               student_id: s.student_id,
               name: s.name,
-              department: s.department,
+              department: s.department.trim().toUpperCase(),
               phone: s.phone
             };
             studentMap.set(s.student_id, student);
@@ -152,7 +154,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
               markedAt: o.marked_at,
               markedBy: o.marked_by,
               studentName: student?.name || '',
-              department: student?.department || '',
+              department: (student?.department || o.department || '').trim().toUpperCase(),
               phone: student?.phone || ''
             };
           }));
@@ -163,11 +165,28 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           if (phase) setElectionPhase(phase);
 
           const nota: Record<string, number> = {};
-          configData.filter((c: any) => c.key.startsWith('nota_')).forEach((c: any) => {
-            const pos = c.key.replace('nota_', '');
-            nota[pos] = parseInt(c.value, 10) || 0;
+          const offlineNota: Record<string, number> = {};
+          
+          configData.forEach((c: any) => {
+            if (c.key.startsWith('online_nota_')) {
+              let pos = c.key.replace('online_nota_', '');
+              if (pos.includes('_')) {
+                const [p, d] = pos.split('_');
+                pos = `${p}_${d.trim().toUpperCase()}`;
+              }
+              nota[pos] = (nota[pos] || 0) + parseInt(c.value, 10);
+            } else if (c.key.startsWith('offline_nota_')) {
+              let pos = c.key.replace('offline_nota_', '');
+              if (pos.includes('_')) {
+                const [p, d] = pos.split('_');
+                pos = `${p}_${d.trim().toUpperCase()}`;
+              }
+              nota[pos] = (nota[pos] || 0) + parseInt(c.value, 10);
+              offlineNota[pos] = (offlineNota[pos] || 0) + parseInt(c.value, 10);
+            }
           });
           setNotaVotes(nota);
+          setOfflineNotaVotes(offlineNota);
         }
 
       } catch (error) {
@@ -188,7 +207,9 @@ export function VotingProvider({ children }: { children: ReactNode }) {
             id: c.id, name: c.name, position: c.position as any,
             online_votes: c.online_votes || 0,
             offline_votes: c.offline_votes || 0,
-            votes: c.votes || 0, department: c.department, party: c.party
+            votes: c.votes || 0, 
+            department: c.department.trim().toUpperCase(), 
+            party: c.party
           }]);
         } else if (payload.eventType === 'UPDATE') {
           const updated = payload.new;
@@ -199,7 +220,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
             votes: updated.votes || 0,
             name: updated.name,
             position: updated.position as any,
-            department: updated.department,
+            department: updated.department.trim().toUpperCase(),
             party: updated.party
           } : c));
         } else if (payload.eventType === 'DELETE') {
@@ -238,6 +259,10 @@ export function VotingProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'registered_students' }, fetchData)
       .subscribe();
 
+    const offlineSub = supabase.channel('offline_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'offline_records' }, fetchData)
+      .subscribe();
+
     const phaseSub = supabase.channel('config_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'election_config' }, fetchData)
       .subscribe();
@@ -256,6 +281,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(candidatesSub);
       supabase.removeChannel(nominationsSub);
       supabase.removeChannel(studentsSub);
+      supabase.removeChannel(offlineSub);
       supabase.removeChannel(phaseSub);
     };
   }, []);
@@ -316,15 +342,23 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           const dept = parts[2];
 
           const notaKey = dept ? `${position}_${dept}` : position;
-          const currentCount = notaVotes[notaKey] || 0;
-          const newCount = currentCount + 1;
+          const dbKey = `online_nota_${notaKey}`;
+          
+          const { data: configData } = await supabase
+            .from('election_config')
+            .select('value')
+            .eq('key', dbKey)
+            .single();
+
+          const currentNota = configData ? parseInt(configData.value, 10) : 0;
+          const newCount = currentNota + 1;
 
           await supabase.from('election_config').upsert({
-            key: `nota_${notaKey}`,
+            key: dbKey,
             value: newCount.toString()
           });
 
-          setNotaVotes(prev => ({ ...prev, [notaKey]: newCount }));
+          setNotaVotes(prev => ({ ...prev, [notaKey]: (prev[notaKey] || 0) + 1 }));
         } else {
           const candidateId = voteId;
           const currentCandidate = candidates.find(c => c.id === candidateId);
@@ -465,16 +499,24 @@ export function VotingProvider({ children }: { children: ReactNode }) {
     if (count <= 0) return;
     try {
       const notaKey = department ? `${position}_${department}` : position;
-      const currentCount = notaVotes[notaKey] || 0;
+      const dbKey = `offline_nota_${notaKey}`;
+      
+      const { data: configData } = await supabase
+        .from('election_config')
+        .select('value')
+        .eq('key', dbKey)
+        .single();
+
+      const currentCount = configData ? parseInt(configData.value, 10) : 0;
       const newCount = currentCount + count;
 
       const { error } = await supabase.from('election_config').upsert({
-        key: `nota_${notaKey}`,
+        key: dbKey,
         value: newCount.toString()
       });
 
       if (error) throw error;
-      setNotaVotes(prev => ({ ...prev, [notaKey]: newCount }));
+      // Note: We don't manually update state here because fetchData or realtime sub will handle it
       toast({ title: 'Success', description: `${count} vote(s) added to NOTA (${position}).` });
     } catch (error: any) {
       console.error('Error adding offline NOTA:', error);
@@ -656,44 +698,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         console.log('✅ Robust election reset complete.');
       }
 
-      if (phase === 'results') {
-        console.log('📊 Finalizing election results: Auto-calculating NOTA for non-voters...');
-        
-        // 1. Identify non-voters (those who did not vote online AND were not marked offline)
-        // Note: students who were marked offline but box count is lower are handled elsewhere or ignored
-        const votedOnlineSet = new Set(votedUsers);
-        const nonVoters = registeredStudents.filter(s => 
-          !votedOnlineSet.has(s.student_id) && 
-          !offlineRecords.find(r => r.student_id === s.student_id)?.markedOffline
-        );
-        
-        console.log(`📉 Found ${nonVoters.length} non-voters.`);
-
-        if (nonVoters.length > 0) {
-          // 2. Identify all departments
-          const depts = [...new Set(registeredStudents.map(s => s.department))];
-          
-          // 3. Increment NOTA for each position category
-          for (const pos of POSITIONS) {
-            if (pos === 'Department Representative') {
-              for (const dept of depts) {
-                const deptNonVoters = nonVoters.filter(s => s.department === dept).length;
-                if (deptNonVoters > 0) {
-                  const key = `nota_${pos}_${dept}`;
-                  const current = notaVotes[`${pos}_${dept}`] || 0;
-                  await supabase.from('election_config').upsert({ key, value: (current + deptNonVoters).toString() });
-                }
-              }
-            } else {
-              const key = `nota_${pos}`;
-              const current = notaVotes[pos] || 0;
-              await supabase.from('election_config').upsert({ key, value: (current + nonVoters.length).toString() });
-            }
-          }
-        }
-      }
-
-      // Finally update the phase
+      // Update the phase
       const { error: phaseError } = await supabase
         .from('election_config')
         .upsert({ key: 'election_phase', value: phase });
@@ -746,7 +751,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         nominations, addNomination, updateNominationStatus,
         offlineRecords, markOfflineVote, unmarkOfflineVote, addOfflineVotesForCandidate, addOfflineNota,
         registeredStudents, addStudent, addStudentsBulk, removeStudent, isStudentRegistered,
-        isLoading, notaVotes
+        isLoading, notaVotes, offlineNotaVotes
       }}
     >
       {children}
