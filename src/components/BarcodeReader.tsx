@@ -44,12 +44,29 @@ const BarcodeReader: React.FC<BarcodeReaderProps> = ({ onDetected }) => {
         },
       );
 
+      let lastCode = "";
+      let count = 0;
+
       Quagga.onDetected((data) => {
         const code = data.codeResult.code;
-        console.log('Barcode detected and processed:', code);
-        if (code !== null) {
+        if (code === null) return;
+        
+        console.log('Detection attempt:', code);
+
+        if (code === lastCode) {
+          count++;
+          console.log(`Matching code detected ${count} times:`, code);
+        } else {
+          lastCode = code;
+          count = 1;
+        }
+
+        if (count >= 3) {
+          console.log('Barcode verified after 3 consecutive identical reads:', code);
           onDetected(code);
-          setScanning(false); // stop scanning when a code is detected
+          setScanning(false);
+          lastCode = "";
+          count = 0;
         }
       });
     };
