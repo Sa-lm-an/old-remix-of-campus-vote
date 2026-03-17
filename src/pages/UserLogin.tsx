@@ -58,17 +58,25 @@ const UserLogin = () => {
       return;
     }
 
-    // Automatically transition to OTP
-    setIsLoading(true);
-    // Simulate sending OTP
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsLoading(false);
-
-    toast({
-      title: 'OTP Sent',
-      description: `A verification code has been sent to your registered phone ending in ${student.phone.slice(-3)}.`,
-    });
-    setStep('otp');
+    try {
+      setIsLoading(true);
+      // Faster simulated OTP delivery
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      
+      toast({
+        title: 'OTP Sent',
+        description: `Verification code sent to registered mobile *******${student.phone.slice(-3)}.`,
+      });
+      setStep('otp');
+    } catch (error) {
+       toast({
+         title: 'Error',
+         description: 'Failed to process verification. Please try again.',
+         variant: 'destructive'
+       });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePhoneSubmit = async () => {
@@ -109,12 +117,12 @@ const UserLogin = () => {
   const stepLabels = ['Verify ID', 'OTP'];
 
   return (
-    <div className="min-h-screen gradient-hero relative overflow-hidden">
+    <div className="min-h-screen gradient-hero relative overflow-y-auto">
       {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-80 h-80 bg-accent/15 rounded-full blur-3xl" />
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-80 h-80 bg-accent/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 py-8 relative z-10">
+      <div className="container mx-auto px-4 py-6 md:py-12 relative z-10 min-h-screen flex flex-col justify-center">
         <div className="pt-4" />
 
         <div className="mx-auto mt-8 max-w-md">

@@ -36,58 +36,77 @@ const ControllerDashboard = () => {
   const [offlineConfirm, setOfflineConfirm] = useState<{ id: string; name: string; count: number; isNota?: boolean } | null>(null);
   const PAGE_SIZE = 10;
 
-  const departments = useMemo(() => [...new Set(offlineRecords.map(r => r.department))], [offlineRecords]);
+  const departments = useMemo(() => {
+    if (!offlineRecords.length) return [];
+    return [...new Set(offlineRecords.map(r => r.department))];
+  }, [offlineRecords]);
 
   const filteredRecords = useMemo(() => {
+    const isVoted = new Set(votedUsers);
     let records = offlineRecords.map(r => ({
       ...r,
-      votedOnline: r.votedOnline || votedUsers.includes(r.student_id),
+      votedOnline: r.votedOnline || isVoted.has(r.student_id),
     }));
 
     if (search) {
       const q = search.toLowerCase();
-      records = records.filter(r => r.studentName.toLowerCase().includes(q) || r.student_id.toLowerCase().includes(q));
+      records = records.filter(r => 
+        r.studentName.toLowerCase().includes(q) || 
+        r.student_id.toLowerCase().includes(q)
+      );
     }
+    
     if (deptFilter !== 'all') records = records.filter(r => r.department === deptFilter);
     if (statusFilter === 'online') records = records.filter(r => r.votedOnline);
     else if (statusFilter === 'offline') records = records.filter(r => r.markedOffline);
     else if (statusFilter === 'pending') records = records.filter(r => !r.votedOnline && !r.markedOffline);
 
     records.sort((a, b) => {
-      let cmp = 0;
-      if (sortBy === 'name') cmp = a.studentName.localeCompare(b.studentName);
-      else if (sortBy === 'department') cmp = a.department.localeCompare(b.department);
-      else {
-        const statusRank = (r: typeof a) => r.votedOnline ? 0 : r.markedOffline ? 1 : 2;
-        cmp = statusRank(a) - statusRank(b);
-      }
-      return sortAsc ? cmp : -cmp;
+      if (sortBy === 'name') return sortAsc ? a.studentName.localeCompare(b.studentName) : b.studentName.localeCompare(a.studentName);
+      if (sortBy === 'department') return sortAsc ? a.department.localeCompare(b.department) : b.department.localeCompare(a.department);
+      
+      const statusRank = (r: typeof a) => r.votedOnline ? 0 : r.markedOffline ? 1 : 2;
+      return sortAsc ? statusRank(a) - statusRank(b) : statusRank(b) - statusRank(a);
     });
 
     return records;
   }, [offlineRecords, votedUsers, search, deptFilter, statusFilter, sortBy, sortAsc]);
 
   const stats = useMemo(() => {
-    const all = offlineRecords.map(r => ({ ...r, votedOnline: r.votedOnline || votedUsers.includes(r.student_id) }));
+    const isVoted = new Set(votedUsers);
+    let online = 0;
+    let offline = 0;
+    let pending = 0;
+
+    offlineRecords.forEach(r => {
+      if (r.votedOnline || isVoted.has(r.student_id)) online++;
+      else if (r.markedOffline) offline++;
+      else pending++;
+    });
+
     return {
-      total: all.length,
-      online: all.filter(r => r.votedOnline).length,
-      offline: all.filter(r => r.markedOffline).length,
-      pending: all.filter(r => !r.votedOnline && !r.markedOffline).length,
+      total: offlineRecords.length,
+      online,
+      offline,
+      pending,
     };
   }, [offlineRecords, votedUsers]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
-  const pagedRecords = filteredRecords.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pagedRecords = useMemo(() => 
+    filteredRecords.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filteredRecords, currentPage]
+  );
 
   // Group candidates by position
   const candidatesByPosition = useMemo(() => {
-    return candidates.reduce<Record<string, typeof candidates>>((acc, c) => {
-      if (!acc[c.position]) acc[c.position] = [];
-      acc[c.position].push(c);
-      return acc;
-    }, {});
+    const grouped: Record<string, typeof candidates> = {};
+    candidates.forEach(c => {
+      if (!grouped[c.position]) grouped[c.position] = [];
+      grouped[c.position].push(c);
+    });
+    return grouped;
   }, [candidates]);
 
   const positionKeys = Object.keys(candidatesByPosition);

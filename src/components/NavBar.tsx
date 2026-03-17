@@ -69,11 +69,11 @@ const NavBar = () => {
                     )}
 
                     {/* Brand & Logo - now logs out and goes home */}
-                    <div className={`flex items-center gap-[6px] cursor-pointer group ${!isHome ? 'ml-0' : ''}`} onClick={handleSignout}>
-                        <div className="relative flex items-center justify-center w-20 h-20 group-hover:scale-105 transition-transform duration-300">
+                    <div className={`flex items-center gap-[4px] sm:gap-[6px] cursor-pointer group ${!isHome ? 'ml-0' : ''}`} onClick={handleSignout}>
+                        <div className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 group-hover:scale-105 transition-transform duration-300">
                             <LogoImg />
                         </div>
-                        <span className="font-bold text-[26px] tracking-tight ml-1">
+                        <span className="font-bold text-[20px] sm:text-[26px] tracking-tight ml-0 sm:ml-1 sm:inline">
                             <span className="text-white">Vox</span><span className="text-[#E0C58F]">Nova</span>
                         </span>
                     </div>
@@ -81,7 +81,7 @@ const NavBar = () => {
 
                 {/* Desktop Links — only shown on home page */}
                 {isHome && (
-                    <div className="hidden md:flex items-center gap-10 text-[15px] font-medium">
+                    <div className="hidden lg:flex items-center gap-10 text-[15px] font-medium">
                         <a href="/#how-it-works" className="text-white/80 hover:text-[#E0C58F] transition-colors">How It Works</a>
                         <a href="/#about" className="text-white/80 hover:text-[#E0C58F] transition-colors">About</a>
                         <a href="/#contact" className="text-white/80 hover:text-[#E0C58F] transition-colors">Contact</a>
@@ -89,33 +89,35 @@ const NavBar = () => {
                 )}
 
                 {/* Right side: Login + Home on main page, Profile + Signout on inside pages */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                     {/* Logged in state for specialized pages */}
-                    {!isHome && currentUser && (
+                    {currentUser && (
                         <>
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-[#E0C58F]/30">
-                                <div className="h-2 w-2 rounded-full bg-[#E0C58F] animate-pulse" />
-                                <span className="text-sm font-semibold text-white">{currentUser.student_id}</span>
-                                <span className="text-xs text-white/70">{currentUser.name?.split(' ')[0]}</span>
+                            <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-white/10 border border-[#E0C58F]/30">
+                                <div className="h-2 w-2 rounded-full bg-[#E0C58F] animate-pulse hidden xs:block" />
+                                <span className="text-[10px] sm:text-sm font-semibold text-white">
+                                    {location.pathname === '/vote' ? currentUser.student_id : currentUser.student_id.slice(-4)}
+                                </span>
+                                <span className="text-[10px] sm:text-xs text-white/70 hidden sm:block">{currentUser.name?.split(' ')[0]}</span>
                             </div>
                             <button
                                 onClick={handleSignout}
                                 title="Sign out"
-                                className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-red-500/20 text-white/80 hover:text-red-400 transition-colors ml-2"
+                                className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-red-500/20 text-white/80 hover:text-red-400 transition-colors ml-1"
                             >
-                                <LogOut size={17} />
+                                <LogOut size={16} />
                             </button>
                         </>
                     )}
 
-                    {/* Login button only on home or if not logged in on other pages */}
-                    {isHome && !currentUser && (
+                    {/* Login button shown everywhere if not logged in */}
+                    {!currentUser && (
                         <Button
                             onClick={() => navigate('/login')}
-                            className="bg-[#E0C58F] hover:bg-[#d4b57a] text-[#112250] rounded-[2rem] px-6 py-2 h-[42px] text-sm font-bold transition-all shadow-[0_4px_12px_rgba(224,197,143,0.25)] hover:shadow-[0_6px_16px_rgba(224,197,143,0.35)] border-none flex items-center gap-2 hover:-translate-y-[1px]"
+                            className="bg-[#E0C58F] hover:bg-[#d4b57a] text-[#112250] rounded-[2rem] px-3 sm:px-6 py-2 h-[36px] sm:h-[42px] text-xs sm:text-sm font-bold transition-all shadow-[0_4px_12px_rgba(224,197,143,0.25)] hover:shadow-[0_6px_16px_rgba(224,197,143,0.35)] border-none flex items-center gap-2 hover:-translate-y-[1px]"
                         >
                             <User size={16} strokeWidth={2.5} />
-                            Login
+                            <span className=" sm:inline">Login</span>
                         </Button>
                     )}
 
@@ -123,9 +125,9 @@ const NavBar = () => {
                     <button
                         onClick={handleHomeClick}
                         title="Home"
-                        className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-[#E0C58F] transition-colors ml-1"
+                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-[#E0C58F] transition-colors ml-0.5 sm:ml-1"
                     >
-                        <Home size={17} />
+                        <Home size={16} />
                     </button>
                 </div>
             </nav>

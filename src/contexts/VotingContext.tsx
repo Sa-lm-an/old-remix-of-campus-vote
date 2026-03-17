@@ -59,8 +59,22 @@ export function VotingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch candidates
-        const { data: candidatesData } = await supabase.from('candidates').select('*');
+        const [
+          { data: candidatesData },
+          { data: nominationsData },
+          { data: studentsData },
+          { data: votedData },
+          { data: offlineData },
+          { data: configData }
+        ] = await Promise.all([
+          supabase.from('candidates').select('*'),
+          supabase.from('nominations').select('*'),
+          supabase.from('registered_students').select('*'),
+          supabase.from('voted_users').select('student_id'),
+          supabase.from('offline_records').select('*'),
+          supabase.from('election_config').select('*')
+        ]);
+
         if (candidatesData) {
           setCandidates(candidatesData.map(c => ({
             id: c.id,
@@ -74,8 +88,6 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           })));
         }
 
-        // Fetch nominations
-        const { data: nominationsData } = await supabase.from('nominations').select('*');
         if (nominationsData) {
           setNominations(nominationsData.map(n => ({
             id: n.id,
@@ -91,38 +103,39 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           })));
         }
 
-        // Fetch registered students
-        const { data: studentsData } = await supabase.from('registered_students').select('*');
+        // Create a lookup map for students to optimize O(N) mapping
+        const studentMap = new Map();
         if (studentsData) {
-          setRegisteredStudents(studentsData.map(s => ({
-            student_id: s.student_id,
-            name: s.name,
-            department: s.department,
-            phone: s.phone
-          })));
+          setRegisteredStudents(studentsData.map(s => {
+            const student = {
+              student_id: s.student_id,
+              name: s.name,
+              department: s.department,
+              phone: s.phone
+            };
+            studentMap.set(s.student_id, student);
+            return student;
+          }));
         }
 
-        // Fetch voted users
-        const { data: votedData } = await supabase.from('voted_users').select('student_id');
         if (votedData) setVotedUsers(votedData.map(v => v.student_id));
 
-        // Fetch offline records
-        const { data: offlineData } = await supabase.from('offline_records').select('*');
         if (offlineData) {
-          setOfflineRecords(offlineData.map(o => ({
-            student_id: o.student_id,
-            votedOnline: o.voted_online,
-            markedOffline: o.marked_offline,
-            markedAt: o.marked_at,
-            markedBy: o.marked_by,
-            studentName: studentsData?.find(s => s.student_id === o.student_id)?.name || '',
-            department: studentsData?.find(s => s.student_id === o.student_id)?.department || '',
-            phone: studentsData?.find(s => s.student_id === o.student_id)?.phone || ''
-          })));
+          setOfflineRecords(offlineData.map(o => {
+            const student = studentMap.get(o.student_id);
+            return {
+              student_id: o.student_id,
+              votedOnline: o.voted_online,
+              markedOffline: o.marked_offline,
+              markedAt: o.marked_at,
+              markedBy: o.marked_by,
+              studentName: student?.name || '',
+              department: student?.department || '',
+              phone: student?.phone || ''
+            };
+          }));
         }
 
-        // Fetch election phase
-        const { data: configData } = await supabase.from('election_config').select('*');
         if (configData) {
           const phase = configData.find(c => c.key === 'election_phase')?.value as ElectionPhase;
           if (phase) setElectionPhase(phase);

@@ -32,19 +32,19 @@ const Login = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen gradient-hero">
-      <div className="container mx-auto px-4 py-8">
-        <div className="pt-4" />
+    <div className="min-h-screen gradient-hero relative overflow-y-auto flex flex-col justify-center">
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="mx-auto max-w-lg">
+          <div className="text-center animate-scale-in">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+              Select Your Role
+            </h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Choose how you would like to access the portal
+            </p>
+          </div>
 
-        <div className="mx-auto mt-12 max-w-md text-center">
-          <h2 className="font-display text-3xl font-bold text-foreground animate-slide-up -translate-y-0.5">
-            Select Your Role
-          </h2>
-          <p className="mt-2 text-muted-foreground animate-slide-up -translate-y-0.5">
-            Choose how you'd like to sign in
-          </p>
-
-          <div className="mt-10 flex flex-col gap-4 animate-slide-up">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 md:mt-12">
             {loginOptions.map((opt) => (
               <button
                 key={opt.title}

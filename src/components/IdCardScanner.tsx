@@ -21,14 +21,13 @@ export function IdCardScanner({ onScan }: IdCardScannerProps) {
     
     setIsScanning(true);
     setShowCamera(false);
-    // Simulate verification delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Snappier delay for verification
+    await new Promise((resolve) => setTimeout(resolve, 300));
     setIsScanning(false);
     setScanned(true);
     
-    setTimeout(() => {
-      onScan(finalId);
-    }, 500);
+    // Call onScan immediately after mark is set
+    onScan(finalId);
   };
 
   return (
