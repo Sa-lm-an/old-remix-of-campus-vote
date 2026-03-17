@@ -8,7 +8,7 @@ import { OtpInput } from '@/components/OtpInput';
 import { useVoting } from '@/contexts/VotingContext';
 import { toast } from '@/hooks/use-toast';
 
-type Step = 'scan' | 'phone' | 'otp';
+type Step = 'scan' | 'otp';
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const UserLogin = () => {
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleIdScan = (id: string) => {
+  const handleIdScan = async (id: string) => {
     if (!isStudentRegistered(id)) {
       toast({
         title: 'Not Registered',
@@ -36,7 +36,18 @@ const UserLogin = () => {
       return;
     }
 
+    const student = registeredStudents.find(s => s.student_id === id);
+    if (!student?.phone) {
+      toast({
+        title: 'Missing Phone Record',
+        description: 'No phone number found for this ID. Contact the admin.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setStudentId(id);
+    setPhone(student.phone);
 
     if (votedUsers.includes(id) && redirectTo !== '/nominate') {
       toast({
@@ -47,19 +58,21 @@ const UserLogin = () => {
       return;
     }
 
-    setStep('phone');
+    // Automatically transition to OTP
+    setIsLoading(true);
+    // Simulate sending OTP
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setIsLoading(false);
+
+    toast({
+      title: 'OTP Sent',
+      description: `A verification code has been sent to your registered phone ending in ${student.phone.slice(-3)}.`,
+    });
+    setStep('otp');
   };
 
   const handlePhoneSubmit = async () => {
-    if (phone.length < 10) {
-      toast({
-        title: 'Invalid Phone',
-        description: 'Please enter a valid phone number.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    // This is now triggered automatically from handleIdScan or via Resend button
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
@@ -91,9 +104,9 @@ const UserLogin = () => {
     }
   };
 
-  const stepIndex = ['scan', 'phone', 'otp'].indexOf(step);
-  const stepIcons = [Fingerprint, Phone, KeyRound];
-  const stepLabels = ['Verify ID', 'Phone', 'OTP'];
+  const stepIndex = ['scan', 'otp'].indexOf(step);
+  const stepIcons = [Fingerprint, KeyRound];
+  const stepLabels = ['Verify ID', 'OTP'];
 
   return (
     <div className="min-h-screen gradient-hero relative overflow-hidden">
@@ -106,28 +119,31 @@ const UserLogin = () => {
 
         <div className="mx-auto mt-8 max-w-md">
           {/* Progress Steps */}
-          <div className="mb-10 flex items-center justify-center gap-3">
+          <div className="mb-10 flex items-center justify-center gap-6">
             {stepLabels.map((label, i) => {
               const Icon = stepIcons[i];
+              const isCurrent = step === (i === 0 ? 'scan' : 'otp');
+              const isCompleted = stepIndex > i;
+              
               return (
-                <div key={label} className="flex items-center gap-3">
+                <div key={label} className="flex items-center gap-6">
                   <div className="flex flex-col items-center gap-2">
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 ${step === ['scan', 'phone', 'otp'][i]
+                      className={`flex h-14 w-14 items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 ${isCurrent
                         ? 'bg-[#112250] text-white shadow-[0_0_20px_rgba(17,34,80,0.3)] scale-110 border-2 border-[#E0C58F]'
-                        : i < stepIndex
+                        : isCompleted
                           ? 'bg-[#E0C58F] text-[#112250]'
                           : 'glass-card text-muted-foreground'
                         }`}
                     >
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-6 w-6" />
                     </div>
-                    <span className={`text-xs font-bold ${step === ['scan', 'phone', 'otp'][i] ? 'text-[#112250]' : 'text-muted-foreground'}`}>
+                    <span className={`text-xs font-bold ${isCurrent ? 'text-[#112250]' : 'text-muted-foreground'}`}>
                       {label}
                     </span>
                   </div>
-                  {i < 2 && (
-                    <div className={`w-12 h-0.5 rounded-full mb-6 transition-colors ${i < stepIndex ? 'bg-[#E0C58F]' : 'bg-border'}`} />
+                  {i < 1 && (
+                    <div className={`w-16 h-0.5 rounded-full mb-6 transition-colors ${isCompleted ? 'bg-[#E0C58F]' : 'bg-border'}`} />
                   )}
                 </div>
               );
@@ -145,61 +161,17 @@ const UserLogin = () => {
                     Verify Your Identity
                   </h2>
                   <p className="mt-2 text-muted-foreground">
-                    Enter your student ID to continue
+                    {isLoading ? "Fetching student record..." : "Enter your student ID to continue"}
                   </p>
                 </div>
-                <IdCardScanner onScan={handleIdScan} />
-              </div>
-            )}
-
-            {step === 'phone' && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary shadow-glow">
-                    <Phone className="h-8 w-8 text-primary-foreground" />
-                  </div>
-                  <h2 className="font-display text-2xl font-bold text-foreground">
-                    Phone Verification
-                  </h2>
-                  <p className="mt-2 text-muted-foreground">
-                    We'll send a verification code
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 rounded-2xl border-2 border-border/50 bg-background/50 backdrop-blur-sm p-4 transition-all focus-within:border-primary focus-within:shadow-glow">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                      <Phone className="h-6 w-6 text-primary" />
-                    </div>
-                    <Input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      className="border-0 bg-transparent text-lg focus-visible:ring-0"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handlePhoneSubmit}
-                    disabled={phone.length < 10 || isLoading}
-                    variant="hero"
-                    size="xl"
-                    className="w-full"
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        Sending...
-                      </span>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-5 w-5" />
-                        Send OTP
-                      </>
-                    )}
-                  </Button>
-                </div>
+                {isLoading ? (
+                   <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                      <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                      <p className="text-sm font-medium text-muted-foreground">Simulating OTP delivery...</p>
+                   </div>
+                ) : (
+                  <IdCardScanner onScan={handleIdScan} />
+                )}
               </div>
             )}
 
@@ -213,7 +185,7 @@ const UserLogin = () => {
                     Enter OTP
                   </h2>
                   <p className="mt-2 text-muted-foreground">
-                    Code sent to ******{phone.slice(-4)}
+                    Code sent to registered mobile *******{phone.slice(-3)}
                   </p>
                 </div>
 
