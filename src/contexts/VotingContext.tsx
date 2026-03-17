@@ -55,28 +55,50 @@ export function VotingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [notaVotes, setNotaVotes] = useState<Record<string, number>>({});
 
-  // Initial Data Fetching
+  // Initial Data Fetching & Real-time Subscriptions
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
+        console.log('📡 Fetching initial election data...');
+
+        // Helper to fetch data safely without blocking others
+        const safeFetch = async (table: string, select = '*') => {
+          try {
+            const { data, error } = await (supabase.from(table as any) as any).select(select);
+            if (error) throw error;
+            return data as any[];
+          } catch (e) {
+            console.error(`❌ Error fetching ${table}:`, e);
+            if (table === 'nominations') {
+              toast({
+                title: 'Data Load Warning',
+                description: 'Nominations list is too large to load, but other features will work.',
+                variant: 'destructive',
+              });
+            }
+            return null;
+          }
+        };
+
         const [
-          { data: candidatesData },
-          { data: nominationsData },
-          { data: studentsData },
-          { data: votedData },
-          { data: offlineData },
-          { data: configData }
+          candidatesData,
+          // nominationsData,
+          studentsData,
+          votedData,
+          offlineData,
+          configData
         ] = await Promise.all([
-          supabase.from('candidates').select('*'),
-          supabase.from('nominations').select('*'),
-          supabase.from('registered_students').select('*'),
-          supabase.from('voted_users').select('student_id'),
-          supabase.from('offline_records').select('*'),
-          supabase.from('election_config').select('*')
+          safeFetch('candidates'),
+          // safeFetch('nominations'),
+          safeFetch('registered_students'),
+          safeFetch('voted_users', 'student_id'),
+          safeFetch('offline_records'),
+          safeFetch('election_config')
         ]);
 
         if (candidatesData) {
-          setCandidates(candidatesData.map(c => ({
+          setCandidates(candidatesData.map((c: any) => ({
             id: c.id,
             name: c.name,
             position: c.position as Position,
@@ -88,25 +110,25 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           })));
         }
 
-        if (nominationsData) {
-          setNominations(nominationsData.map(n => ({
-            id: n.id,
-            student_id: n.student_id,
-            name: n.name,
-            position: n.position as Position,
-            department: n.department,
-            party: n.party || '',
-            application_form_url: n.application_form_url || '',
-            marklist_url: n.marklist_url || '',
-            status: n.status as any,
-            submitted_at: n.submitted_at
-          })));
-        }
+        // if (nominationsData) {
+        //   setNominations(nominationsData.map((n: any) => ({
+        //     id: n.id,
+        //     student_id: n.student_id,
+        //     name: n.name,
+        //     position: n.position as Position,
+        //     department: n.department,
+        //     party: n.party || '',
+        //     application_form_url: n.application_form_url,
+        //     marklist_url: n.marklist_url,
+        //     status: n.status as any,
+        //     submitted_at: n.submitted_at
+        //   })));
+        // }
 
-        // Create a lookup map for students to optimize O(N) mapping
         const studentMap = new Map();
         if (studentsData) {
-          setRegisteredStudents(studentsData.map(s => {
+          console.log(`✅ Loaded ${studentsData.length} students.`);
+          setRegisteredStudents(studentsData.map((s: any) => {
             const student = {
               student_id: s.student_id,
               name: s.name,
@@ -118,10 +140,10 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           }));
         }
 
-        if (votedData) setVotedUsers(votedData.map(v => v.student_id));
+        if (votedData) setVotedUsers(votedData.map((v: any) => v.student_id));
 
         if (offlineData) {
-          setOfflineRecords(offlineData.map(o => {
+          setOfflineRecords(offlineData.map((o: any) => {
             const student = studentMap.get(o.student_id);
             return {
               student_id: o.student_id,
@@ -137,11 +159,11 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         }
 
         if (configData) {
-          const phase = configData.find(c => c.key === 'election_phase')?.value as ElectionPhase;
+          const phase = configData.find((c: any) => c.key === 'election_phase')?.value as ElectionPhase;
           if (phase) setElectionPhase(phase);
 
           const nota: Record<string, number> = {};
-          configData.filter(c => c.key.startsWith('nota_')).forEach(c => {
+          configData.filter((c: any) => c.key.startsWith('nota_')).forEach((c: any) => {
             const pos = c.key.replace('nota_', '');
             nota[pos] = parseInt(c.value, 10) || 0;
           });
@@ -149,7 +171,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         }
 
       } catch (error) {
-        console.error('Error fetching initial data:', error);
+        console.error('🚨 Fatal error during data initialization:', error);
       } finally {
         setIsLoading(false);
       }
@@ -171,11 +193,14 @@ export function VotingProvider({ children }: { children: ReactNode }) {
         } else if (payload.eventType === 'UPDATE') {
           const updated = payload.new;
           setCandidates(prev => prev.map(c => c.id === updated.id ? {
-            ...c, votes: updated.votes,
-            online_votes: updated.online_votes,
-            offline_votes: updated.offline_votes,
-            name: updated.name, position: updated.position,
-            department: updated.department, party: updated.party
+            ...c,
+            online_votes: updated.online_votes || 0,
+            offline_votes: updated.offline_votes || 0,
+            votes: updated.votes || 0,
+            name: updated.name,
+            position: updated.position as any,
+            department: updated.department,
+            party: updated.party
           } : c));
         } else if (payload.eventType === 'DELETE') {
           setCandidates(prev => prev.filter(c => c.id !== payload.old.id));
@@ -184,26 +209,38 @@ export function VotingProvider({ children }: { children: ReactNode }) {
 
     const nominationsSub = supabase.channel('nominations_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'nominations' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const n = payload.new;
-          setNominations(prev => [...prev, {
-            id: n.id, student_id: n.student_id, name: n.name, position: n.position,
-            department: n.department, party: n.party,
-            application_form_url: n.application_form_url, marklist_url: n.marklist_url,
-            status: n.status, submitted_at: n.submitted_at
-          }]);
-        } else if (payload.eventType === 'UPDATE') {
-          const n = payload.new;
-          setNominations(prev => prev.map(item => item.id === n.id ? {
-            ...item, status: n.status, application_form_url: n.application_form_url, marklist_url: n.marklist_url
-          } : item));
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const n = payload.new as any;
+          setNominations(prev => {
+            const mappedNomination = {
+              id: n.id,
+              student_id: n.student_id,
+              name: n.name,
+              position: n.position as any,
+              department: n.department,
+              party: n.party || '',
+              status: n.status as any,
+              submitted_at: n.submitted_at,
+              application_form_url: n.application_form_url,
+              marklist_url: n.marklist_url
+            };
+
+            const exists = prev.find(item => item.id === n.id);
+            if (exists) {
+              return prev.map(item => item.id === n.id ? mappedNomination : item);
+            }
+            return [...prev, mappedNomination];
+          });
         }
       }).subscribe();
 
+    const studentsSub = supabase.channel('students_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'registered_students' }, fetchData)
+      .subscribe();
+
     const phaseSub = supabase.channel('config_changes')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'election_config', filter: 'key=eq.election_phase' }, (payload) => {
-        setElectionPhase(payload.new.value as ElectionPhase);
-      }).subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'election_config' }, fetchData)
+      .subscribe();
 
     // Initial loading of controller creds
     const savedControllerCreds = localStorage.getItem('voxnova_controller_creds');
@@ -218,6 +255,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(candidatesSub);
       supabase.removeChannel(nominationsSub);
+      supabase.removeChannel(studentsSub);
       supabase.removeChannel(phaseSub);
     };
   }, []);
@@ -524,7 +562,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           .from('candidates')
           .update({ votes: 0, online_votes: 0, offline_votes: 0 })
           .not('id', 'is', null);
-          
+
         if (candError) {
           console.warn('⚠️ Bulk candidate reset failed, trying individual reset fallback...', candError);
           // Fallback: Fetch all IDs and update one by one
@@ -543,13 +581,13 @@ export function VotingProvider({ children }: { children: ReactNode }) {
           .from('voted_users')
           .delete()
           .not('student_id', 'is', null);
-          
+
         if (voteError) {
           console.error('❌ Failed to clear voted users:', voteError);
-          toast({ 
-            title: 'Voter List Reset Failed', 
-            description: voteError.message, 
-            variant: 'destructive' 
+          toast({
+            title: 'Voter List Reset Failed',
+            description: voteError.message,
+            variant: 'destructive'
           });
           throw new Error('Database error: Voter reset failed');
         }
@@ -564,13 +602,13 @@ export function VotingProvider({ children }: { children: ReactNode }) {
             marked_by: null
           })
           .not('student_id', 'is', null);
-          
+
         if (offlineError) {
           console.error('❌ Failed to reset offline records:', offlineError);
-          toast({ 
-            title: 'Offline Records Reset Failed', 
-            description: offlineError.message, 
-            variant: 'destructive' 
+          toast({
+            title: 'Offline Records Reset Failed',
+            description: offlineError.message,
+            variant: 'destructive'
           });
           throw new Error('Database error: Offline records reset failed');
         }
@@ -581,7 +619,7 @@ export function VotingProvider({ children }: { children: ReactNode }) {
             .from('election_config')
             .update({ value: '0' })
             .like('key', 'nota_%');
-            
+
           if (notaError) console.error('⚠️ Failed to reset NOTA keys:', notaError);
         } catch (e) {
           console.warn('⚠️ Manual NOTA reset failed, skipping...', e);
