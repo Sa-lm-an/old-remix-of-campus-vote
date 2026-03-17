@@ -36,20 +36,20 @@ const Login = () => {
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mx-auto max-w-lg">
           <div className="text-center animate-scale-in">
-            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl animate-slide-up -translate-y-0.5">
               Select Your Role
             </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-4 text-lg text-muted-foreground animate-slide-up -translate-y-0.5">
               Choose how you would like to access the portal
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 md:mt-12">
+          <div className="mt-8 grid gap-4 grid-cols-1  md:mt-12 animate-slide-up">
             {loginOptions.map((opt) => (
               <button
                 key={opt.title}
                 onClick={() => navigate(opt.path)}
-                className="group flex items-center gap-5 rounded-2xl bg-card p-5 shadow-card border border-border/40 text-left transition-all hover:shadow-elevated hover:-translate-y-0.5 active:scale-[0.98] -translate-y-0.5"
+                className="group flex flex-col sm:flex-row items-center gap-4 rounded-2xl bg-card p-5 shadow-card border border-border/40 text-center sm:text-left transition-all hover:shadow-elevated hover:-translate-y-1 active:scale-[0.98] -translate-y-0.5"
               >
                 <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${opt.gradient} ${opt.shadow} transition-transform group-hover:scale-110`}>
                   <opt.icon className="h-7 w-7 text-primary-foreground" />

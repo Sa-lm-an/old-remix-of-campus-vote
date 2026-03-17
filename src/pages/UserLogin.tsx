@@ -8,6 +8,8 @@ import { OtpInput } from '@/components/OtpInput';
 import { useVoting } from '@/contexts/VotingContext';
 import { toast } from '@/hooks/use-toast';
 
+import { sendOTP } from '@/lib/twilio';
+
 type Step = 'scan' | 'otp';
 
 const UserLogin = () => {
@@ -15,6 +17,7 @@ const UserLogin = () => {
   const [searchParams] = useSearchParams();
   const { currentUser, setCurrentUser, votedUsers, isStudentRegistered, registeredStudents } = useVoting();
   const [step, setStep] = useState<Step>('scan');
+  const [generatedOtp, setGeneratedOtp] = useState<string>('');
   const redirectTo = searchParams.get('redirect') === 'nominate' ? '/nominate' : '/vote';
 
   useEffect(() => {
@@ -31,7 +34,7 @@ const UserLogin = () => {
       toast({
         title: 'Not Registered',
         description: 'Your student ID is not in the eligible voter list. Contact the admin.',
-        variant: 'destructive',
+        variant: 'default',
       });
       return;
     }
@@ -60,18 +63,27 @@ const UserLogin = () => {
 
     try {
       setIsLoading(true);
-      // Faster simulated OTP delivery
-      await new Promise((resolve) => setTimeout(resolve, 600));
       
-      toast({
-        title: 'OTP Sent',
-        description: `Verification code sent to registered mobile *******${student.phone.slice(-3)}.`,
-      });
-      setStep('otp');
+      // Generate real 6-digit OTP
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(otpCode);
+      
+      // Send real SMS via Twilio
+      const success = await sendOTP(student.phone, otpCode);
+      
+      if (success) {
+        toast({
+          title: 'OTP Sent',
+          description: `Verification code sent to registered mobile *******${student.phone.slice(-3)}.`,
+        });
+        setStep('otp');
+      } else {
+        throw new Error('Twilio failed');
+      }
     } catch (error) {
        toast({
-         title: 'Error',
-         description: 'Failed to process verification. Please try again.',
+         title: 'SMS Service Error',
+         description: 'Failed to send verification code. Please check your Twilio credentials.',
          variant: 'destructive'
        });
     } finally {
@@ -80,20 +92,14 @@ const UserLogin = () => {
   };
 
   const handlePhoneSubmit = async () => {
-    // This is now triggered automatically from handleIdScan or via Resend button
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-
-    toast({
-      title: 'OTP Sent',
-      description: 'A verification code has been sent to your phone.',
-    });
-    setStep('otp');
+    // Resend functionality
+    if (!student_id || !phone) return;
+    handleIdScan(student_id);
   };
 
   const handleOtpComplete = (otp: string) => {
-    if (otp.length === 6) {
+    // Verify against the real generated OTP
+    if (otp === generatedOtp) {
       const student = registeredStudents.find(s => s.student_id === student_id);
       setCurrentUser({
         id: Date.now().toString(),
@@ -109,6 +115,12 @@ const UserLogin = () => {
       });
 
       navigate(redirectTo);
+    } else {
+      toast({
+        title: 'Invalid OTP',
+        description: 'The verification code you entered is incorrect.',
+        variant: 'destructive',
+      });
     }
   };
 

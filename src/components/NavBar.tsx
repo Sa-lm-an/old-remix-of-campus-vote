@@ -81,7 +81,7 @@ const NavBar = () => {
 
                 {/* Desktop Links — only shown on home page */}
                 {isHome && (
-                    <div className="hidden lg:flex items-center gap-10 text-[15px] font-medium">
+                    <div className="hidden md:flex items-center gap-10 text-[15px] font-medium">
                         <a href="/#how-it-works" className="text-white/80 hover:text-[#E0C58F] transition-colors">How It Works</a>
                         <a href="/#about" className="text-white/80 hover:text-[#E0C58F] transition-colors">About</a>
                         <a href="/#contact" className="text-white/80 hover:text-[#E0C58F] transition-colors">Contact</a>
@@ -111,7 +111,7 @@ const NavBar = () => {
                     )}
 
                     {/* Login button shown everywhere if not logged in */}
-                    {!currentUser && (
+                    {!currentUser && isHome && (
                         <Button
                             onClick={() => navigate('/login')}
                             className="bg-[#E0C58F] hover:bg-[#d4b57a] text-[#112250] rounded-[2rem] px-3 sm:px-6 py-2 h-[36px] sm:h-[42px] text-xs sm:text-sm font-bold transition-all shadow-[0_4px_12px_rgba(224,197,143,0.25)] hover:shadow-[0_6px_16px_rgba(224,197,143,0.35)] border-none flex items-center gap-2 hover:-translate-y-[1px]"
