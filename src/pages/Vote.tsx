@@ -16,24 +16,15 @@ const Vote = () => {
   const navigate = useNavigate();
   const { candidates, currentUser, castVote, setCurrentUser, electionPhase, offlineRecords, isLoading } = useVoting();
 
+  const [selectedVotes, setSelectedVotes] = useState<Partial<Record<Position, string>>>({});
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
+
   useEffect(() => {
     if (!currentUser && !isLoading) {
       navigate('/user-login');
     }
   }, [currentUser, isLoading, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#112250]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E0C58F] border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!currentUser) return null;
-  const [selectedVotes, setSelectedVotes] = useState<Partial<Record<Position, string>>>({});
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
 
   // Auto-select unopposed candidates and NOTA for empty positions
   useEffect(() => {
@@ -67,7 +58,15 @@ const Vote = () => {
     }
   }, [candidates, currentUser]);
 
-  if (!currentUser) { navigate('/user-login'); return null; }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#112250]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E0C58F] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!currentUser) return null;
 
   const offlineRecord = offlineRecords.find(r => r.student_id === currentUser.student_id);
   const isMarkedOffline = offlineRecord?.markedOffline ?? false;
